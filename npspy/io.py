@@ -3,7 +3,6 @@ import numpy as np
 import copy
 import os
 from typing import Dict, Optional, Tuple, Union, Literal, List
-import torch
 
 
 def read_pickle(
