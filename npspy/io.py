@@ -22,7 +22,15 @@ def read_pickle(
 
 def read_obj_or_pickle(
     obj: Union[dict, str],
-):
+) -> dict:
+    """Read a pickled file or a dict obj. If is a dict obj, just copy it and return the copied one
+
+    Args:
+        obj (Union[dict, str]): a dict obj or a pickle file 
+
+    Returns:
+        dict: dict
+    """
     if isinstance(obj, str):
         obj = read_pickle(obj)
     elif isinstance(obj, dict):
@@ -32,7 +40,7 @@ def read_obj_or_pickle(
 def save_pickle(
     obj,
     save_to_file: str,
-):
+) -> None:
     """Save an obj to a pickle file.
 
     Args:
@@ -52,7 +60,13 @@ def save_pickle(
 def save_np_as_npy(
     a: np.ndarray,
     npy_file_name: str
-):
+) -> None:
+    """save a numpy array as a npy file
+
+    Args:
+        a (np.ndarray): the numpy array to be saved
+        npy_file_name (str): the npy file
+    """
     assert npy_file_name[-4:] == '.npy'
     with open(npy_file_name, "wb") as f:
         np.save(f, arr=a)
@@ -60,6 +74,14 @@ def save_np_as_npy(
 def load_npy_as_np(
     npy_file_name: str
 ) -> np.ndarray:
+    """load a npy file to a numpy array
+
+    Args:
+        npy_file_name (str): the npy file
+
+    Returns:
+        np.ndarray: numpy array
+    """
     assert npy_file_name[-4:] == '.npy'
     with open(npy_file_name, 'rb') as f:
         a = np.load(f)
