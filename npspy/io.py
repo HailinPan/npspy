@@ -1,7 +1,13 @@
 import pickle
 import numpy as np
+import pandas as pd
 import copy
 import os
+import re
+import glob
+import configparser
+from configparser import ConfigParser, ExtendedInterpolation
+
 from typing import Dict, Optional, Tuple, Union, Literal, List
 
 
@@ -86,3 +92,91 @@ def load_npy_as_np(
     with open(npy_file_name, 'rb') as f:
         a = np.load(f)
     return a
+
+
+
+def one_csv_file_to_dict(
+    csv_file,
+    tail: int = 0,
+    label: str = None,
+):
+    df = pd.read_csv(csv_file)
+    currents = df.iloc[-tail:,2].to_numpy()
+    one_read_obj = {'signal': currents}
+    if label != None:
+        one_read_obj.update({'label': label})
+    return one_read_obj
+
+
+def read_csv_files_to_a_dict(
+    csv_files: list,
+    tail: int = 0,
+    label: str = None,
+) -> dict:
+    """read csv files and save as one dict obj
+
+    Args:
+        csv_files (list): csv files
+        tail (int, optional): select tail this number of signal. Defaults to 0.
+                              0 means use all signal. 100 means use tail 100 signal
+        label (str, optional): label. Defaults to None.
+
+    Returns:
+        dict: obj
+    """
+    obj = {}
+    for one_csv_file in csv_files:
+        read_id = os.path.basename(one_csv_file)
+        read_id = re.search(r'(.*)\.csv$', read_id).group(1)
+        obj[read_id] = one_csv_file_to_dict(one_csv_file,
+                                            tail=tail,
+                                            label=label)
+    return obj
+
+
+def read_dat_file(
+    dat_files: Union[str, list],
+    sort_dat_files: bool = True,
+):
+    if isinstance(dat_files, str):
+        dat_files = [dat_files]
+
+    if sort_dat_files:
+        dat_files = _sort_dat_files(dat_files)
+    
+    signals = []
+    for one_dat_file in dat_files:
+        signals.append(np.fromfile(one_dat_file, dtype=np.float32))
+    signals = np.concatenate(signals)
+    return signals
+
+def _sort_dat_files(
+    dat_files: list,
+) -> list:
+    """return dat files with a specific order. the order are definded by the number after channelX
+
+    Args:
+        dat_files (list): dat_files list
+
+    Returns:
+        list: sorted dat files
+    """
+    dat_files = np.array(dat_files)
+    dat_files = dat_files[np.argsort(np.array([int(re.search(r'channel\d+_(\d+)\.dat', one).group(1)) for one in dat_files]))]
+    return list(dat_files)
+
+def read_all_dat_files_in_a_channel(
+    channel_path: str,
+    sort_dat_files: bool = True,
+):
+    dat_files = glob.glob(f'{channel_path}/channel*dat')
+    signals = read_dat_file(dat_files=dat_files, sort_dat_files=sort_dat_files)
+    return signals
+
+
+def read_ini_file_as_config(
+    ini_file: str = 'config.ini',
+):
+    config = configparser.ConfigParser(interpolation=ExtendedInterpolation())
+    config.read(ini_file)
+    return config
