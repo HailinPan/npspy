@@ -15,6 +15,7 @@ from functools import partial
 
 
 from . import io
+from . import stat
 
 
 
@@ -217,3 +218,31 @@ def get_obj_from_fast5_dir_and_find_window(
     if save:
         io.save_pickle(obj, f'{save_dir}/{save_file_prefix}.pkl')
     return obj
+
+
+
+def get_obj_from_fast5_dir_and_find_window_and_save_pkl_and_stat(
+    fast5_dir: str,
+    pool_num: int = 1,
+    save_dir: str = './',
+    save_file_prefix: str = 'sample',
+) -> None:
+    obj = get_obj_from_fast5_dir_and_find_window(
+        fast5_dir=fast5_dir,
+        pool_num=pool_num,
+        save = False,
+        save_dir=save_dir,
+        save_file_prefix=save_file_prefix,
+    )
+
+    stat.get_read_number(
+        obj, return_df_or_dict='df', sample_name=save_file_prefix,
+        save=True, save_dir=save_dir,
+        save_file_name=f'{save_file_prefix}.pkl.stat.csv'
+    )
+
+    io.save_pickle(obj, f'{save_dir}/{save_file_prefix}.pkl')
+
+    return None
+
+    

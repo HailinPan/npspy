@@ -10,6 +10,7 @@ import matplotlib.gridspec as gridspec
 from matplotlib.axes import Axes
 import os
 import re
+import gc
 from sklearn.neighbors import KernelDensity
 import matplotlib.gridspec as grid_spec
 from . import tools as tl
@@ -156,10 +157,21 @@ def draw_one_read_with_stair_signal(
     if save_figure:
         create_dir_if_not_exist(save_dir)
         plt.savefig(f'{save_dir}/{save_file_name}')
-        plt.close()
+        plt.close('all')
+        # gc.collect()
+        # MatplotlibClearMemory()
     else:
         return ax
 
+
+# def MatplotlibClearMemory():
+#     #usedbackend = matplotlib.get_backend()
+#     #matplotlib.use('Cairo')
+#     allfignums = plt.get_fignums()
+#     for i in allfignums:
+#         fig = plt.figure(i)
+#         fig.clear()
+#         plt.close(fig)
 
     
 
@@ -180,12 +192,14 @@ def draw_one_read_with_window(
     title = None, 
     ax = None,
     window_color: str = 'red',
+    scale_by_openpore: bool = False,
     draw_one_read_kwargs: Union[dict, None] = {}
 ):
     ax = draw_one_read(obj=obj, read_id=read_id, figsize=figsize, save_figure=False,
                   save_dir=save_dir, save_file_name=save_file_name, title=title, ax=ax,
+                  scale_by_openpore=scale_by_openpore,
                   **draw_one_read_kwargs)
-    read_obj = obj[read_id]
+    # read_obj = obj[read_id]
 
     # if read_obj['window'] is not None:
     #     start, end = read_obj['window']
@@ -193,7 +207,7 @@ def draw_one_read_with_window(
 
     # draw window
     if 'window' in obj[read_id].keys():
-        draw_window(obj, read_id, ax=ax, color=window_color)
+        draw_window(obj, read_id, ax=ax, color=window_color, scale_by_openpore=scale_by_openpore)
 
     if save_figure:
         create_dir_if_not_exist(save_dir)
@@ -208,6 +222,7 @@ def draw_window(
     ax,
     color: str = 'red',
     att_of_y_for_window: str = 'signal',
+    scale_by_openpore: bool = False,
 ):
     read_obj = obj[read_id]
     if isinstance(read_obj['window'], (list, tuple)):
@@ -216,7 +231,8 @@ def draw_window(
         # ax.axvline(window_end, color='red', ls='--')
         xs = [window_start, window_end]
         ys = [read_obj[att_of_y_for_window][window_start], read_obj[att_of_y_for_window][window_end]]
-
+        if scale_by_openpore:
+            ys = np.array(ys)/read_obj['OpenPore']
         ax.plot(xs, ys, 'x',
                 color=color)
 
@@ -225,6 +241,7 @@ def draw_all_reads_in_an_obj(
     figsize: Tuple[float, float] = (15,8),
     save_dir: str = "./",
     save_file_name_postfix: str = '.signal.pdf',
+    scale_by_openpore: bool = False,
         
 ):
     for read_id, read_obj in obj.items():
@@ -233,7 +250,8 @@ def draw_all_reads_in_an_obj(
                                   figsize=figsize,
                                   save_figure=True,
                                   save_dir=save_dir,
-                                  save_file_name=f'{read_id}{save_file_name_postfix}'
+                                  save_file_name=f'{read_id}{save_file_name_postfix}',
+                                  scale_by_openpore=scale_by_openpore,
                                   )
 
 def draw_random_x_reads_in_an_obj(
@@ -243,6 +261,7 @@ def draw_random_x_reads_in_an_obj(
     figsize: Tuple[float, float] = (15,8),
     save_dir: str = "./",
     save_file_name_postfix: str = '.signal.pdf',
+    scale_by_openpore: bool = True,
 ):
     np.random.seed(seed)
     all_read_ids = list(obj.keys())
@@ -252,11 +271,16 @@ def draw_random_x_reads_in_an_obj(
         obj=obj,
         read_ids=select_read_ids,
     )
+    # if scale_by_openpore:
+    #     for read_id, read_obj in sub_obj.items():
+    #         read_obj['signal'] = read_obj['signal']/read_obj['OpenPore']
+
     draw_all_reads_in_an_obj(
         obj=sub_obj,
         figsize=figsize,
         save_dir=save_dir,
-        save_file_name_postfix=save_file_name_postfix
+        save_file_name_postfix=save_file_name_postfix,
+        scale_by_openpore=scale_by_openpore
     )
 
         
@@ -280,7 +304,7 @@ def draw_all_reads_with_stair_signal_in_an_obj(
 
 def draw_stair_num_histplot_for_an_obj(
     obj: dict,
-    figsize: Tuple[float, float] = (8,8),
+    figsize: Tuple[float, float] = (5,5),
     save_figure: bool = False, 
     save_dir: str = "./",
     save_file_name_prefix: str = 'stair',
@@ -290,10 +314,10 @@ def draw_stair_num_histplot_for_an_obj(
         fig, ax = plt.subplots(figsize=figsize)
     
     x = [len(read_obj['transitions']) - 1 for read_id, read_obj in obj.items()]
-    sns.histplot(data=x, kde=True, discrete=True, ax=ax)
-    ax.text(0.8, 0.95, f'median: {np.median(x):.1f}', ha='left', va='top', transform=ax.transAxes, fontsize=12)
-    ax.text(0.8, 0.90, f'mean: {np.mean(x):.1f}', ha='left', va='top', transform=ax.transAxes, fontsize=12)
-    ax.text(0.8, 0.85, f'sd: {np.std(x):.1f}', ha='left', va='top', transform=ax.transAxes, fontsize=12)
+    sns.histplot(data=x, kde=False, discrete=True, ax=ax)
+    ax.text(0.7, 0.95, f'median: {np.median(x):.1f}', ha='left', va='top', transform=ax.transAxes, fontsize=12)
+    ax.text(0.7, 0.90, f'mean: {np.mean(x):.1f}', ha='left', va='top', transform=ax.transAxes, fontsize=12)
+    ax.text(0.7, 0.85, f'sd: {np.std(x):.1f}', ha='left', va='top', transform=ax.transAxes, fontsize=12)
 
 
     if save_figure:

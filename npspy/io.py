@@ -177,6 +177,8 @@ def read_all_dat_files_in_a_channel(
 def read_ini_file_as_config(
     ini_file: str = 'config.ini',
 ):
-    config = configparser.ConfigParser(interpolation=ExtendedInterpolation())
+    config = configparser.ConfigParser(interpolation=ExtendedInterpolation(),
+                                       converters={'list': lambda x: [i.strip() for i in x.split(',')]},
+                                       )
     config.read(ini_file)
     return config

@@ -5,3 +5,4 @@ from . import plot as pl
 from . import single_aa
 from . import fast2pkl
 from . import stat
+from . import slice_pep
