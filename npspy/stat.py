@@ -35,4 +35,5 @@ def get_read_number(
     if save:
         assert return_df_or_dict == 'df'
         res.to_csv(os.path.join(save_dir, save_file_name))
-        
+    else:
+        return res

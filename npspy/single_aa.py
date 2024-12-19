@@ -1,3 +1,14 @@
+#!/usr/bin/env python
+# -*- encoding: utf-8 -*-
+'''
+@Filename: single_aa.py
+@Description: description of this file
+@Datatime: 2024/12/17 10:20:54
+@Author: Hailin Pan
+@Email: panhailin@genomics.cn, hailinpan1988@163.com
+@Version: v1.0
+'''
+
 import pickle
 import numpy as np
 import pandas as pd
@@ -177,6 +188,8 @@ def cal_read_num_for_each_type_each_channel(
     df = pd.DataFrame([[read_obj['type'], re.search(r'(channel\d+)', read_id).group(1)] for read_id, read_obj in obj.items()], columns=['type', 'channel'])
     read_num_df = df.groupby(['channel', 'type']).size().unstack()
     read_num_df = read_num_df.fillna(0)
-    read_num_df['type1'] = read_num_df['type1'].astype('int32')
-    read_num_df['type2'] = read_num_df['type2'].astype('int32')
+    if 'type1' in read_num_df.columns:
+        read_num_df['type1'] = read_num_df['type1'].astype('int32')
+    if 'type2' in read_num_df.columns:
+        read_num_df['type2'] = read_num_df['type2'].astype('int32')
     return read_num_df

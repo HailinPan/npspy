@@ -1,3 +1,14 @@
+#!/usr/bin/env python
+# -*- encoding: utf-8 -*-
+'''
+@Filename: plot.py
+@Description: description of this file
+@Datatime: 2024/12/17 10:19:42
+@Author: Hailin Pan
+@Email: panhailin@genomics.cn, hailinpan1988@163.com
+@Version: v1.0
+'''
+
 import seaborn as sns
 from scipy.cluster.hierarchy import dendrogram, linkage
 import matplotlib.pyplot as plt
@@ -283,6 +294,34 @@ def draw_random_x_reads_in_an_obj(
         scale_by_openpore=scale_by_openpore
     )
 
+def draw_random_x_reads_in_an_obj_with_specific_att_range(
+    obj: dict,
+    seed: int = 0,
+    random_read_num: int = 100,
+    att: str = 'mean_of_I2I0',
+    att_min: float = 0.0,
+    att_max: float = 1.0,
+    figsize: Tuple[float, float] = (15,8),
+    save_dir: str = "./",
+    save_file_name_postfix: str = '.signal.pdf',
+    scale_by_openpore: bool = True,
+):
+    sub_obj = tl.extract_read_with_att_range(
+        obj=obj,
+        att=att,
+        att_min=att_min,
+        att_max=att_max,
+    )
+    draw_random_x_reads_in_an_obj(
+        obj=sub_obj,
+        seed=seed,
+        random_read_num=random_read_num,
+        figsize=figsize,
+        save_dir=save_dir,
+        save_file_name_postfix=save_file_name_postfix,
+        scale_by_openpore=scale_by_openpore
+    )
+    
         
 def draw_all_reads_with_stair_signal_in_an_obj(
     obj: dict,
@@ -398,3 +437,5 @@ def draw_ridge_plots(
 
     # plt.tight_layout()
     # plt.show()
+
+
